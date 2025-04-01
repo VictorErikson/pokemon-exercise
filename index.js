@@ -53,7 +53,6 @@ function renderPokemonDropdown(pokemonList) {
     pokemonList.forEach(pokemon => {
         const option = document.createElement("option");
         option.textContent = pokemon.name;
-        option.value = pokemon.url;
         dropdown.appendChild(option);
     });
 }
