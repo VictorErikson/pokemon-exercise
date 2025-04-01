@@ -12,7 +12,52 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 
 class Pokemon {
-    
+    constructor(name, types, hp, attack, defense, moves){
+        this.name = name;
+        this.types = types;
+        this.hp = hp;
+        this.attack = attack;
+        this.defense = defense;
+        this.moves = moves;
+    }
+    description = async() =>{
+        const typesList = this.types.map(t => t.type.name)
+        const firstFiveMoves = this.moves.slice(0, 5);
+        const firstFiveMovesURLS = firstFiveMoves.map(m => m.move.url);
+        // const firstFiveMovesNames = firstFiveMoves.map(m => m.move.name);
+        const getData = async (url) => {
+            const response = (await fetch(url))
+            const data = response.json();
+
+            return data
+        }
+        const promises = firstFiveMovesURLS.map(url => getData(url));
+        let [move1, move2, move3, move4, move5] = await Promise.all(promises); 
+
+
+
+        // const liTags = firstFiveMovesNames.
+      
+        return `
+        <div class="pokemon">
+        <h2>${this.name}</h2>
+            <p>Types: ${typesList.join(', ')}</p>
+            <p>HP: ${this.hp}</p>
+            <p>Attack: ${this.attack}</p>
+            <p>Defense: ${this.defense}</p>
+        </div>
+        <div class="moves">
+            <h3>Moves</h3>
+            <ul>
+                <li>${move1.name} ${move1.power ? `(${move1.power})` : ''}</li>
+                <li>${move2.name} ${move2.power ? `(${move2.power})` : ''}</li>
+                <li>${move3.name} ${move3.power ? `(${move3.power})` : ''}</li>
+                <li>${move4.name} ${move4.power ? `(${move4.power})` : ''}</li>
+                <li>${move5.name} ${move5.power ? `(${move5.power})` : ''}</li>
+            </ul>
+        </div>
+        `
+    }
 }
 
 function startPokemonApp() {
@@ -49,10 +94,11 @@ function renderPokemonDropdown(pokemonList) {
     const dropdown = document.getElementById("pokemon-select");
     dropdown.innerHTML = "";
     
-    //Nedan saknas något för att kunna hämta data när en option är vald
+  
     pokemonList.forEach(pokemon => {
         const option = document.createElement("option");
         option.textContent = pokemon.name;
+        option.value = pokemon.url;
         dropdown.appendChild(option);
     });
 }
@@ -61,15 +107,18 @@ function fetchPokemonData(url) {
     fetch(url)
         .then(response => response.json())
         .then(data => {
+            
+            const pokemon = new Pokemon (data.name, data.types, data.stats[0].base_stat, data.stats[1].base_stat, data.stats[2].base_stat, data.moves)
             //Skapa här en instans av din Pokemon-klass, och skicka den som argument till funktionen nedan.
-
-            displayPokemonData(data);
+            // console.log(pokemon);
+            displayPokemonData(pokemon);
         });
 }
 
-function displayPokemonData(pokemon) {
+const displayPokemonData = async(pokemon) => {
     const infoDiv = document.getElementById("pokemon-info");
-    //Skriv ut din Pokemon i DOM:en
+    // console.log(pokemon.description());
+    infoDiv.innerHTML = await pokemon.description();
     
 }
 
