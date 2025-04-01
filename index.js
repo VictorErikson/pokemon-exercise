@@ -12,7 +12,21 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 
 class Pokemon {
-    
+    constructor(name, height, weight, attack, defense, imageUrl, moves) {
+        this.name = name;
+        this.height = height;
+        this.weight = weight;
+        this.attack = attack;
+        this.defense = defense;
+        this.imageUrl = imageUrl;
+        this.moves = moves;
+    }
+}
+
+const getData = async (url) => {
+    const response = await fetch(url);
+    const json = await response.json();
+    return json
 }
 
 function startPokemonApp() {
@@ -53,23 +67,43 @@ function renderPokemonDropdown(pokemonList) {
     pokemonList.forEach(pokemon => {
         const option = document.createElement("option");
         option.textContent = pokemon.name;
+        option.value = pokemon.url;
         dropdown.appendChild(option);
     });
 }
 
-function fetchPokemonData(url) {
-    fetch(url)
-        .then(response => response.json())
-        .then(data => {
-            //Skapa här en instans av din Pokemon-klass, och skicka den som argument till funktionen nedan.
+async function fetchPokemonData(url) {
+    let response = await fetch(url);
+    let data = await response.json();
 
-            displayPokemonData(data);
-        });
+    //Fetch moves for the Pokemon
+    const moveUrls = data.moves.slice(0,5).map(move => move.move.url);
+    let movesPromises = moveUrls.map(url => getData(url));
+    let moves = await Promise.all(movesPromises);
+    console.log(moves);
+    const pokemon = new Pokemon(
+        data.name,
+        data.height,
+        data.weight,
+        data.stats.find(stat => stat.stat.name === "attack").base_stat,
+        data.stats.find(stat => stat.stat.name === "defense").base_stat,
+        data.sprites.front_default,
+        moves
+    );
+    displayPokemonData(pokemon);
 }
 
 function displayPokemonData(pokemon) {
     const infoDiv = document.getElementById("pokemon-info");
-    //Skriv ut din Pokemon i DOM:en
-    
+    infoDiv.innerHTML = `
+        <h2>${pokemon.name}</h2>
+        <img src="${pokemon.imageUrl}" alt="${pokemon.name}">
+        <p>Height: ${pokemon.height}</p>
+        <p>Weight: ${pokemon.weight}</p>
+        <p>Attack: ${pokemon.attack}</p>
+        <p>Defense: ${pokemon.defense}</p>
+        <h3>Moves</h3>
+        ${pokemon.moves.map(move => `<p>${move.name} - ${move.power || 0} Power</p>`).join("")}
+    `;
 }
 
